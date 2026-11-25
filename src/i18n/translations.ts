@@ -8,7 +8,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     navModes: 'Topics',
     navHowTo: 'How to Play',
     heroBadge: 'Daily Phylogenetic Puzzle',
-    heroTitle: 'Which species is evolutionarily closer?',
+    heroTitle: 'EvoGuess — Which Species Is Evolutionarily Closer?',
     heroSubtitle:
       'Test your Tree of Life intuition in 2 minutes. Pick the closer relative and watch the real evolutionary cladogram unfold.',
     modeDaily: 'Daily 5',
@@ -74,7 +74,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     navModes: '专题模式',
     navHowTo: '玩法说明',
     heroBadge: '每日系统发育树谜题',
-    heroTitle: '哪两种生物在进化树上更亲近？',
+    heroTitle: 'EvoGuess 进化树猜谜：哪两种生物更亲近？',
     heroSubtitle:
       '2 分钟测试你的生命之树直觉。选出共同祖先更近的物种，即时展开真实进化分支与分化年代。',
     modeDaily: '每日 5 题',

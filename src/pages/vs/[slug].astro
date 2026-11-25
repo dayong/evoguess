@@ -35,7 +35,7 @@ const jsonLd = {
 <BaseLayout
   title={`${puzzle.seoQuestion.en} | EvoGuess Phylogeny Quiz`}
   description={`Guess whether ${puzzle.target.name.en} is evolutionarily closer to ${puzzle.closer.name.en} or ${puzzle.farther.name.en}, then reveal the real phylogenetic tree and divergence time.`}
-  canonicalPath={`/vs/${puzzle.id}`}
+  canonicalPath={`/vs/${puzzle.id}/`}
   jsonLd={jsonLd}
 >
   <section class="mx-auto max-w-4xl px-4 pt-7 pb-10 sm:pt-10">
@@ -48,7 +48,7 @@ const jsonLd = {
           <>
             <span class="text-slate-300">·</span>
             <a
-              href={`/mode/${category.slug}`}
+              href={`/mode/${category.slug}/`}
               class="hover:underline"
               data-en={category.title.en}
               data-zh={category.title.zh}
@@ -93,7 +93,7 @@ const jsonLd = {
           <div class="grid grid-cols-1 gap-2.5">
             {related.map((p) => (
               <a
-                href={`/vs/${p.id}`}
+                href={`/vs/${p.id}/`}
                 class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-forest-500 hover:bg-forest-50/40"
               >
                 <span class="flex items-center gap-2.5">
