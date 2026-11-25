@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://evoguess-a8w.pages.dev',
+  site: 'https://evoguess.site',
   trailingSlash: 'always',
   integrations: [sitemap()],
   vite: {

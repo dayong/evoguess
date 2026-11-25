@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { title, description, canonicalPath = '/', jsonLd } = Astro.props;
-const siteOrigin = Astro.site?.toString().replace(/\/$/, '') || 'https://evoguess-a8w.pages.dev';
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') || 'https://evoguess.site';
 const normalizedPath = canonicalPath.endsWith('/') ? canonicalPath : `${canonicalPath}/`;
 const canonicalUrl = new URL(normalizedPath, `${siteOrigin}/`).toString();
 const ogImageUrl = new URL('/og-cover.png', `${siteOrigin}/`).toString();
