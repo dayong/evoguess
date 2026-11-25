@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EvoGame from '../../components/EvoGame.astro';
+import { PUZZLES, getCategoryBySlug } from '../../data/puzzles';
+import { UI_STRINGS } from '../../i18n/translations';
+
+export function getStaticPaths() {
+  return PUZZLES.map((puzzle) => ({
+    params: { slug: puzzle.id },
+    props: { puzzle },
+  }));
+}
+
+const { puzzle } = Astro.props;
+const category = getCategoryBySlug(puzzle.category);
+const related = PUZZLES.filter((p) => p.id !== puzzle.id && p.category === puzzle.category).slice(0, 4);
+const en = UI_STRINGS.en;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: puzzle.seoQuestion.en,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: `${puzzle.target.name.en} is more closely related to ${puzzle.closer.name.en} (sharing the clade ${puzzle.closeMrca.clade.en} ~${puzzle.closeMrca.mya} million years ago) than to ${puzzle.farther.name.en} (~${puzzle.farMrca.mya} million years ago). ${puzzle.fact.en}`,
+      },
+    },
+  ],
+};
+---
+
+<BaseLayout
+  title={`${puzzle.seoQuestion.en} | EvoGuess Phylogeny Quiz`}
+  description={`Guess whether ${puzzle.target.name.en} is evolutionarily closer to ${puzzle.closer.name.en} or ${puzzle.farther.name.en}, then reveal the real phylogenetic tree and divergence time.`}
+  canonicalPath={`/vs/${puzzle.id}`}
+  jsonLd={jsonLd}
+>
+  <section class="mx-auto max-w-4xl px-4 pt-7 pb-10 sm:pt-10">
+    <div class="mb-4 flex items-center justify-center gap-4 text-xs font-semibold text-forest-700">
+      <a href="/" class="hover:underline" data-i18n="vsBackHome">
+        {en.vsBackHome}
+      </a>
+      {
+        category && (
+          <>
+            <span class="text-slate-300">·</span>
+            <a
+              href={`/mode/${category.slug}`}
+              class="hover:underline"
+              data-en={category.title.en}
+              data-zh={category.title.zh}
+            >
+              {category.title.en}
+            </a>
+          </>
+        )
+      }
+    </div>
+
+    <div class="mx-auto max-w-2xl text-center mb-6">
+      <h1
+        class="text-2xl sm:text-4xl font-bold tracking-tight text-forest-900"
+        style="font-family: var(--font-display);"
+        data-en={puzzle.seoQuestion.en}
+        data-zh={puzzle.seoQuestion.zh}
+      >
+        {puzzle.seoQuestion.en}
+      </h1>
+    </div>
+
+    <EvoGame
+      puzzles={[puzzle]}
+      mode="single"
+      categoryTitle={category?.shortTitle}
+      salt={`vs-${puzzle.id}`}
+    />
+
+    <!-- Related Matchups -->
+    {
+      related.length > 0 && (
+        <div class="mx-auto mt-12 max-w-2xl">
+          <h2
+            class="text-lg font-bold text-forest-900 mb-3"
+            style="font-family: var(--font-display);"
+            data-en="More Surprising Evolutionary Matchups"
+            data-zh="更多反直觉进化对决"
+          >
+            More Surprising Evolutionary Matchups
+          </h2>
+          <div class="grid grid-cols-1 gap-2.5">
+            {related.map((p) => (
+              <a
+                href={`/vs/${p.id}`}
+                class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-forest-500 hover:bg-forest-50/40"
+              >
+                <span class="flex items-center gap-2.5">
+                  <span class="text-lg">{p.target.emoji}</span>
+                  <span data-en={p.seoQuestion.en} data-zh={p.seoQuestion.zh}>
+                    {p.seoQuestion.en}
+                  </span>
+                </span>
+                <span class="text-forest-600 font-bold">→</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

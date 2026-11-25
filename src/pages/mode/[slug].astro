@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EvoGame from '../../components/EvoGame.astro';
+import { CATEGORIES, getPuzzlesByCategory } from '../../data/puzzles';
+import { UI_STRINGS } from '../../i18n/translations';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((cat) => ({
+    params: { slug: cat.slug },
+    props: { category: cat },
+  }));
+}
+
+const { category } = Astro.props;
+const categoryPuzzles = getPuzzlesByCategory(category.id);
+const en = UI_STRINGS.en;
+---
+
+<BaseLayout
+  title={category.seoTitle}
+  description={category.seoDescription}
+  canonicalPath={`/mode/${category.slug}`}
+>
+  <section class="mx-auto max-w-4xl px-4 pt-7 pb-10 sm:pt-10">
+    <div class="mb-4 text-center">
+      <a
+        href="/"
+        class="inline-flex items-center text-xs font-semibold text-forest-700 hover:underline"
+        data-i18n="vsBackHome"
+      >
+        {en.vsBackHome}
+      </a>
+    </div>
+
+    <div class="mx-auto max-w-2xl text-center mb-6">
+      <div class="text-4xl mb-2">{category.emoji}</div>
+      <h1
+        class="text-3xl sm:text-4xl font-bold tracking-tight text-forest-900"
+        style="font-family: var(--font-display);"
+        data-en={category.title.en}
+        data-zh={category.title.zh}
+      >
+        {category.title.en}
+      </h1>
+      <p
+        class="mt-2 text-sm sm:text-base text-slate-600"
+        data-en={category.description.en}
+        data-zh={category.description.zh}
+      >
+        {category.description.en}
+      </p>
+    </div>
+
+    <EvoGame
+      puzzles={categoryPuzzles}
+      mode="category"
+      categoryTitle={category.shortTitle}
+      salt={`cat-${category.slug}`}
+    />
+
+    <!-- Internal pSEO links for this category -->
+    <div class="mx-auto mt-12 max-w-2xl">
+      <h2
+        class="text-lg font-bold text-forest-900 mb-3"
+        style="font-family: var(--font-display);"
+        data-en={`All ${category.shortTitle.en} Matchups`}
+        data-zh={`全部${category.shortTitle.zh}进化对决`}
+      >
+        All {category.shortTitle.en} Matchups
+      </h2>
+      <div class="grid grid-cols-1 gap-2.5">
+        {
+          categoryPuzzles.map((p) => (
+            <a
+              href={`/vs/${p.id}`}
+              class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-forest-500 hover:bg-forest-50/40"
+            >
+              <span class="flex items-center gap-2.5">
+                <span class="text-lg">{p.target.emoji}</span>
+                <span data-en={p.seoQuestion.en} data-zh={p.seoQuestion.zh}>
+                  {p.seoQuestion.en}
+                </span>
+              </span>
+              <span class="text-forest-600 font-bold">→</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

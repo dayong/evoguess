@@ -1,0 +1,776 @@
+---
+import type { EvoPuzzle } from '../data/puzzles';
+import { UI_STRINGS } from '../i18n/translations';
+
+interface Props {
+  puzzles: EvoPuzzle[];
+  mode?: 'daily' | 'category' | 'single';
+  categoryTitle?: { en: string; zh: string };
+  salt?: string;
+}
+
+const {
+  puzzles,
+  mode = 'daily',
+  categoryTitle,
+  salt = 'daily',
+} = Astro.props;
+
+const en = UI_STRINGS.en;
+---
+
+<section
+  id="evoguess-app"
+  class="mx-auto max-w-2xl"
+  data-mode={mode}
+  data-salt={salt}
+  data-category-en={categoryTitle?.en || ''}
+  data-category-zh={categoryTitle?.zh || ''}
+>
+  <!-- Mode Tabs & Stats Strip -->
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    {
+      mode === 'daily' ? (
+        <div class="inline-flex rounded-full border border-forest-200 bg-white p-1 shadow-xs">
+          <button
+            id="tab-daily"
+            type="button"
+            class="rounded-full bg-forest-700 px-4 py-1.5 text-xs font-semibold text-white transition cursor-pointer"
+            data-i18n="modeDaily"
+          >
+            {en.modeDaily}
+          </button>
+          <button
+            id="tab-endless"
+            type="button"
+            class="rounded-full px-4 py-1.5 text-xs font-semibold text-slate-600 transition hover:text-forest-800 cursor-pointer"
+            data-i18n="modeEndless"
+          >
+            {en.modeEndless}
+          </button>
+        </div>
+      ) : (
+        <div class="inline-flex items-center gap-2 rounded-full border border-forest-200 bg-forest-50 px-3.5 py-1.5 text-xs font-semibold text-forest-800">
+          <span>🧬</span>
+          <span
+            data-en={categoryTitle?.en || 'Single Matchup'}
+            data-zh={categoryTitle?.zh || '单题进化对决'}
+          >
+            {categoryTitle?.en || 'Single Matchup'}
+          </span>
+        </div>
+      )
+    }
+
+    <div class="flex items-center gap-2.5 text-xs font-semibold">
+      <div class="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50/90 px-3 py-1 text-amber-800">
+        <span aria-hidden="true">🔥</span>
+        <span data-i18n="streakLabel">{en.streakLabel}</span>:
+        <span id="stat-streak">0</span>
+      </div>
+      <div class="flex items-center gap-1 rounded-full border border-forest-200 bg-white px-3 py-1 text-forest-800">
+        <span aria-hidden="true">🏆</span>
+        <span data-i18n="bestStreakLabel">{en.bestStreakLabel}</span>:
+        <span id="stat-best">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Dots (hidden in single/endless) -->
+  <div id="progress-bar" class="mb-4 flex items-center justify-between gap-2">
+    <div id="progress-dots" class="flex items-center gap-2"></div>
+    <span id="round-indicator" class="text-xs font-semibold text-slate-500">1 / 5</span>
+  </div>
+
+  <!-- Main Interactive Game Card -->
+  <div
+    id="game-stage"
+    class="rounded-3xl border border-forest-200/90 bg-white p-5 sm:p-7 shadow-[0_12px_36px_-18px_rgba(15,41,30,0.22)]"
+  >
+    <!-- Target Species Panel -->
+    <div class="text-center">
+      <p class="text-xs font-semibold uppercase tracking-wider text-forest-600" data-i18n="targetPrompt">
+        {en.targetPrompt}
+      </p>
+
+      <div
+        id="target-card"
+        class="mt-3 inline-flex w-full flex-col items-center justify-center rounded-2xl border border-forest-100 bg-gradient-to-b from-forest-50/80 to-white px-5 py-5"
+      >
+        <div
+          id="target-emoji"
+          class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-5xl shadow-sm ring-1 ring-forest-100"
+        >
+          🐋
+        </div>
+        <h2
+          id="target-name"
+          class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-forest-900"
+          style="font-family: var(--font-display);"
+        >
+          Loading...
+        </h2>
+        <p id="target-sci" class="mt-0.5 text-xs italic text-slate-500"></p>
+        <span
+          id="target-group"
+          class="mt-2 inline-block rounded-full bg-forest-100 px-3 py-0.5 text-[11px] font-semibold text-forest-800"
+        ></span>
+      </div>
+    </div>
+
+    <!-- Divider Prompt -->
+    <div class="my-5 flex items-center gap-3">
+      <div class="h-px flex-1 bg-slate-200"></div>
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" data-i18n="choosePrompt">
+        {en.choosePrompt}
+      </span>
+      <div class="h-px flex-1 bg-slate-200"></div>
+    </div>
+
+    <!-- Candidate Choice Buttons -->
+    <div id="choices-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      <button
+        id="choice-0"
+        type="button"
+        class="choice-btn group relative flex flex-col items-center rounded-2xl border-2 border-slate-200 bg-white p-5 text-center transition-all hover:-translate-y-0.5 hover:border-forest-500 hover:bg-forest-50/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-forest-500 cursor-pointer"
+      >
+        <span class="choice-badge hidden absolute top-3 right-3 rounded-full px-2.5 py-0.5 text-[11px] font-bold"></span>
+        <div class="choice-emoji flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-4xl ring-1 ring-slate-200/80 transition-transform group-hover:scale-105"></div>
+        <span class="choice-name mt-3 text-lg font-bold text-slate-900"></span>
+        <span class="choice-sci mt-0.5 text-xs italic text-slate-500"></span>
+        <span class="choice-group mt-2 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600"></span>
+      </button>
+
+      <button
+        id="choice-1"
+        type="button"
+        class="choice-btn group relative flex flex-col items-center rounded-2xl border-2 border-slate-200 bg-white p-5 text-center transition-all hover:-translate-y-0.5 hover:border-forest-500 hover:bg-forest-50/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-forest-500 cursor-pointer"
+      >
+        <span class="choice-badge hidden absolute top-3 right-3 rounded-full px-2.5 py-0.5 text-[11px] font-bold"></span>
+        <div class="choice-emoji flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-4xl ring-1 ring-slate-200/80 transition-transform group-hover:scale-105"></div>
+        <span class="choice-name mt-3 text-lg font-bold text-slate-900"></span>
+        <span class="choice-sci mt-0.5 text-xs italic text-slate-500"></span>
+        <span class="choice-group mt-2 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600"></span>
+      </button>
+    </div>
+
+    <!-- Cladogram & Explanation Reveal Panel -->
+    <div id="reveal-panel" class="hidden mt-6 animate-pop-in">
+      <div id="verdict-banner" class="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold">
+        <span id="verdict-text"></span>
+        <span id="verdict-mya" class="rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-semibold"></span>
+      </div>
+
+      <!-- Dynamic SVG Phylogenetic Cladogram -->
+      <div class="mt-4 overflow-hidden rounded-2xl border border-forest-100 bg-[#f6faf7] p-4">
+        <div class="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-forest-700">
+          <span>Phylogenetic Tree</span>
+          <span id="clade-summary-badge" class="text-forest-600"></span>
+        </div>
+        <div id="cladogram-container" class="w-full"></div>
+      </div>
+
+      <!-- Evolutionary Fact -->
+      <p id="fact-text" class="mt-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 px-4 py-3.5 text-sm leading-relaxed text-slate-800"></p>
+
+      <!-- Action Button -->
+      <div class="mt-5 flex flex-wrap items-center justify-end gap-3">
+        {
+          mode === 'single' ? (
+            <a
+              href="/"
+              class="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-forest-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-600"
+              data-i18n="vsPageCta"
+            >
+              {en.vsPageCta}
+            </a>
+          ) : (
+            <button
+              id="next-btn"
+              type="button"
+              class="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-forest-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-600 cursor-pointer"
+            >
+              {en.nextRound}
+            </button>
+          )
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary / Scorecard Screen -->
+  <div
+    id="summary-stage"
+    class="hidden animate-pop-in rounded-3xl border border-forest-200 bg-white p-6 sm:p-8 text-center shadow-[0_12px_36px_-18px_rgba(15,41,30,0.22)]"
+  >
+    <div id="summary-emoji" class="text-5xl">🌿</div>
+    <h2
+      id="summary-title"
+      class="mt-3 text-2xl sm:text-3xl font-bold text-forest-900"
+      style="font-family: var(--font-display);"
+    ></h2>
+    <p id="summary-subtitle" class="mt-1.5 text-sm text-slate-600"></p>
+
+    <div id="summary-grid" class="mt-5 flex justify-center gap-2 text-2xl"></div>
+
+    <div class="mt-6 grid grid-cols-3 gap-3 rounded-2xl bg-forest-50/80 p-4 border border-forest-100">
+      <div>
+        <div id="sum-score" class="text-2xl font-bold text-forest-900">0/5</div>
+        <div class="text-[11px] font-semibold text-slate-500" data-i18n="scoreLabel">{en.scoreLabel}</div>
+      </div>
+      <div>
+        <div id="sum-streak" class="text-2xl font-bold text-amber-600">1</div>
+        <div class="text-[11px] font-semibold text-slate-500" data-i18n="dailyStreakLabel">{en.dailyStreakLabel}</div>
+      </div>
+      <div>
+        <div id="sum-accuracy" class="text-2xl font-bold text-forest-700">100%</div>
+        <div class="text-[11px] font-semibold text-slate-500" data-i18n="accuracyLabel">{en.accuracyLabel}</div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <button
+        id="share-btn"
+        type="button"
+        class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-forest-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-600 cursor-pointer"
+      >
+        <span aria-hidden="true">📋</span>
+        <span data-i18n="shareButton">{en.shareButton}</span>
+      </button>
+      <button
+        id="secondary-action-btn"
+        type="button"
+        class="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-forest-200 bg-white px-6 py-3 text-sm font-semibold text-forest-800 transition hover:bg-forest-50 cursor-pointer"
+      >
+        {en.switchToEndless}
+      </button>
+    </div>
+
+    <p id="share-toast" class="hidden mt-3 text-xs font-semibold text-forest-700" data-i18n="copiedToast">
+      {en.copiedToast}
+    </p>
+  </div>
+</section>
+
+<script define:vars={{ puzzles, UI_STRINGS }}>
+  (function () {
+    const root = document.getElementById('evoguess-app');
+    if (!root) return;
+
+    const initialMode = root.getAttribute('data-mode') || 'daily';
+    const salt = root.getAttribute('data-salt') || 'daily';
+    const catEn = root.getAttribute('data-category-en') || '';
+    const catZh = root.getAttribute('data-category-zh') || '';
+
+    // Deterministic PRNG for daily puzzles
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function () {
+        a |= 0;
+        a = (a + 0x6d2b79f5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function hashStr(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function getUtcDateKey() {
+      const now = new Date();
+      return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+    }
+
+    function getDailyNumber() {
+      const now = new Date();
+      const epoch = Date.UTC(2026, 0, 1);
+      const cur = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      return Math.max(1, Math.floor((cur - epoch) / 86400000) + 1);
+    }
+
+    function pickSeeded(pool, count, seedKey) {
+      const rand = mulberry32(hashStr(seedKey));
+      const copy = [...pool];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy.slice(0, Math.min(count, copy.length));
+    }
+
+    function shuffleRandom(pool) {
+      const copy = [...pool];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // Persistence
+    const STATS_KEY = 'evoguess_stats_v1';
+    function loadStats() {
+      try {
+        const raw = localStorage.getItem(STATS_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      return { dailyStreak: 0, lastDailyDate: '', bestEndless: 0, dailyResults: {} };
+    }
+    function saveStats(s) {
+      try {
+        localStorage.setItem(STATS_KEY, JSON.stringify(s));
+      } catch {}
+    }
+
+    let stats = loadStats();
+    let activeMode = initialMode; // 'daily' | 'endless' | 'category' | 'single'
+    let queue = [];
+    let currentIndex = 0;
+    let results = [];
+    let currentOptions = [];
+    let answered = false;
+    let lastChosenIsCloser = false;
+    let endlessStreak = 0;
+
+    // DOM refs
+    const tabDaily = document.getElementById('tab-daily');
+    const tabEndless = document.getElementById('tab-endless');
+    const statStreakEl = document.getElementById('stat-streak');
+    const statBestEl = document.getElementById('stat-best');
+    const progressBar = document.getElementById('progress-bar');
+    const progressDots = document.getElementById('progress-dots');
+    const roundIndicator = document.getElementById('round-indicator');
+    const gameStage = document.getElementById('game-stage');
+    const summaryStage = document.getElementById('summary-stage');
+
+    const targetEmoji = document.getElementById('target-emoji');
+    const targetName = document.getElementById('target-name');
+    const targetSci = document.getElementById('target-sci');
+    const targetGroup = document.getElementById('target-group');
+    const choiceBtns = [document.getElementById('choice-0'), document.getElementById('choice-1')];
+
+    const revealPanel = document.getElementById('reveal-panel');
+    const verdictBanner = document.getElementById('verdict-banner');
+    const verdictText = document.getElementById('verdict-text');
+    const verdictMya = document.getElementById('verdict-mya');
+    const cladeSummaryBadge = document.getElementById('clade-summary-badge');
+    const cladogramContainer = document.getElementById('cladogram-container');
+    const factText = document.getElementById('fact-text');
+    const nextBtn = document.getElementById('next-btn');
+
+    const summaryEmoji = document.getElementById('summary-emoji');
+    const summaryTitle = document.getElementById('summary-title');
+    const summarySubtitle = document.getElementById('summary-subtitle');
+    const summaryGrid = document.getElementById('summary-grid');
+    const sumScore = document.getElementById('sum-score');
+    const sumStreak = document.getElementById('sum-streak');
+    const sumAccuracy = document.getElementById('sum-accuracy');
+    const shareBtn = document.getElementById('share-btn');
+    const secondaryActionBtn = document.getElementById('secondary-action-btn');
+    const shareToast = document.getElementById('share-toast');
+
+    function getLang() {
+      return window.__evoGetLang ? window.__evoGetLang() : 'en';
+    }
+    function t(key) {
+      const lang = getLang();
+      return (UI_STRINGS[lang] && UI_STRINGS[lang][key]) || UI_STRINGS.en[key] || key;
+    }
+
+    function updateStatsStrip() {
+      if (activeMode === 'endless') {
+        statStreakEl.textContent = String(endlessStreak);
+        statBestEl.textContent = String(Math.max(stats.bestEndless, endlessStreak));
+      } else {
+        statStreakEl.textContent = String(stats.dailyStreak);
+        statBestEl.textContent = String(stats.bestEndless);
+      }
+    }
+
+    function renderProgress() {
+      if (activeMode === 'single' || activeMode === 'endless') {
+        progressBar.classList.add('hidden');
+        return;
+      }
+      progressBar.classList.remove('hidden');
+      progressDots.innerHTML = '';
+      for (let i = 0; i < queue.length; i++) {
+        const dot = document.createElement('span');
+        let cls = 'h-2.5 w-7 rounded-full transition-all ';
+        if (i < results.length) {
+          cls += results[i] ? 'bg-forest-600' : 'bg-rose-400';
+        } else if (i === currentIndex) {
+          cls += 'bg-amber-400 ring-2 ring-amber-200';
+        } else {
+          cls += 'bg-slate-200';
+        }
+        dot.className = cls;
+        progressDots.appendChild(dot);
+      }
+      roundIndicator.textContent = `${Math.min(currentIndex + 1, queue.length)} / ${queue.length}`;
+    }
+
+    function renderCladogram(puzzle) {
+      const lang = getLang();
+      const targetLabel = `${puzzle.target.emoji} ${puzzle.target.name[lang]}`;
+      const closerLabel = `${puzzle.closer.emoji} ${puzzle.closer.name[lang]}`;
+      const fartherLabel = `${puzzle.farther.emoji} ${puzzle.farther.name[lang]}`;
+      const closeMya = `~${puzzle.closeMrca.mya} ${t('myaUnit')}`;
+      const farMya = `~${puzzle.farMrca.mya} ${t('myaUnit')}`;
+
+      cladeSummaryBadge.textContent = `${puzzle.closeMrca.clade[lang]} · ${closeMya}`;
+
+      cladogramContainer.innerHTML = `
+        <svg viewBox="0 0 540 175" class="w-full h-auto" role="img" aria-label="Phylogenetic tree">
+          <!-- Root to far split -->
+          <path d="M 24 108 H 96" stroke="#94a3b8" stroke-width="3" fill="none" stroke-linecap="round" class="animate-tree-draw" />
+          <!-- Farther outgroup branch -->
+          <path d="M 96 108 V 146 H 312" stroke="#94a3b8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" class="animate-tree-draw" />
+          <!-- Inner clade trunk -->
+          <path d="M 96 108 V 62 H 214" stroke="#2d7a59" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="animate-tree-draw" />
+          <!-- Target branch -->
+          <path d="M 214 62 V 32 H 312" stroke="#1b4d38" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="animate-tree-draw" />
+          <!-- Closer branch -->
+          <path d="M 214 62 V 92 H 312" stroke="#1b4d38" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="animate-tree-draw" />
+
+          <!-- Nodes -->
+          <circle cx="96" cy="108" r="5" fill="#64748b" />
+          <circle cx="214" cy="62" r="6" fill="#1b4d38" />
+
+          <!-- Node time labels -->
+          <rect x="34" y="116" width="124" height="22" rx="11" fill="#e2e8f0" />
+          <text x="96" y="131" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">${farMya}</text>
+
+          <rect x="150" y="68" width="128" height="22" rx="11" fill="#d1fae5" />
+          <text x="214" y="83" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">${closeMya}</text>
+
+          <!-- Leaf labels -->
+          <text x="324" y="37" font-size="13.5" font-weight="700" fill="#0f291e">${targetLabel}</text>
+          <text x="324" y="97" font-size="13.5" font-weight="700" fill="#065f46">${closerLabel}</text>
+          <text x="324" y="151" font-size="13" font-weight="600" fill="#64748b">${fartherLabel}</text>
+        </svg>
+      `;
+    }
+
+    function renderQuestion() {
+      const puzzle = queue[currentIndex];
+      if (!puzzle) return;
+      const lang = getLang();
+      answered = false;
+
+      gameStage.classList.remove('hidden');
+      summaryStage.classList.add('hidden');
+      revealPanel.classList.add('hidden');
+      shareToast.classList.add('hidden');
+
+      targetEmoji.textContent = puzzle.target.emoji;
+      targetName.textContent = puzzle.target.name[lang];
+      targetSci.textContent = puzzle.target.scientific;
+      targetGroup.textContent = puzzle.target.group[lang];
+
+      // Deterministically order left/right per puzzle so closer isn't predictable
+      const flipSeed = hashStr(`${getUtcDateKey()}:${puzzle.id}:${activeMode === 'endless' ? currentIndex : 0}`);
+      const swap = flipSeed % 2 === 1;
+      currentOptions = swap
+        ? [
+            { species: puzzle.farther, isCloser: false },
+            { species: puzzle.closer, isCloser: true },
+          ]
+        : [
+            { species: puzzle.closer, isCloser: true },
+            { species: puzzle.farther, isCloser: false },
+          ];
+
+      choiceBtns.forEach((btn, idx) => {
+        const opt = currentOptions[idx];
+        btn.disabled = false;
+        btn.className =
+          'choice-btn group relative flex flex-col items-center rounded-2xl border-2 border-slate-200 bg-white p-5 text-center transition-all hover:-translate-y-0.5 hover:border-forest-500 hover:bg-forest-50/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-forest-500 cursor-pointer';
+        const badge = btn.querySelector('.choice-badge');
+        badge.className = 'choice-badge hidden absolute top-3 right-3 rounded-full px-2.5 py-0.5 text-[11px] font-bold';
+        btn.querySelector('.choice-emoji').textContent = opt.species.emoji;
+        btn.querySelector('.choice-name').textContent = opt.species.name[lang];
+        btn.querySelector('.choice-sci').textContent = opt.species.scientific;
+        btn.querySelector('.choice-group').textContent = opt.species.group[lang];
+      });
+
+      renderProgress();
+      updateStatsStrip();
+    }
+
+    function handleGuess(idx) {
+      if (answered) return;
+      answered = true;
+      const puzzle = queue[currentIndex];
+      const chosen = currentOptions[idx];
+      const isCorrect = chosen.isCloser;
+      lastChosenIsCloser = isCorrect;
+
+      results.push(isCorrect);
+
+      if (activeMode === 'endless') {
+        if (isCorrect) {
+          endlessStreak += 1;
+          if (endlessStreak > stats.bestEndless) {
+            stats.bestEndless = endlessStreak;
+            saveStats(stats);
+          }
+        }
+      }
+
+      // Style choice buttons
+      choiceBtns.forEach((btn, i) => {
+        btn.disabled = true;
+        const opt = currentOptions[i];
+        const badge = btn.querySelector('.choice-badge');
+        badge.classList.remove('hidden');
+
+        if (opt.isCloser) {
+          btn.className =
+            'choice-btn relative flex flex-col items-center rounded-2xl border-2 border-forest-600 bg-forest-50/80 p-5 text-center transition-all';
+          badge.className =
+            'choice-badge absolute top-3 right-3 rounded-full bg-forest-700 px-2.5 py-0.5 text-[11px] font-bold text-white';
+          badge.textContent = `✓ ${t('closerTag')}`;
+        } else if (i === idx && !isCorrect) {
+          btn.className =
+            'choice-btn relative flex flex-col items-center rounded-2xl border-2 border-rose-400 bg-rose-50/70 p-5 text-center transition-all';
+          badge.className =
+            'choice-badge absolute top-3 right-3 rounded-full bg-rose-500 px-2.5 py-0.5 text-[11px] font-bold text-white';
+          badge.textContent = `✕ ${t('fartherTag')}`;
+        } else {
+          btn.className =
+            'choice-btn relative flex flex-col items-center rounded-2xl border-2 border-slate-200 bg-slate-50/70 p-5 text-center opacity-70 transition-all';
+          badge.className =
+            'choice-badge absolute top-3 right-3 rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-600';
+          badge.textContent = t('fartherTag');
+        }
+      });
+
+      renderReveal(puzzle, isCorrect);
+      renderProgress();
+      updateStatsStrip();
+    }
+
+    function renderReveal(puzzle, isCorrect) {
+      const lang = getLang();
+      revealPanel.classList.remove('hidden');
+
+      if (isCorrect) {
+        verdictBanner.className =
+          'flex items-center justify-between rounded-2xl bg-forest-100 px-4 py-3 text-sm font-bold text-forest-900';
+        verdictText.textContent = `🌿 ${t('correctBadge')}`;
+      } else {
+        verdictBanner.className =
+          'flex items-center justify-between rounded-2xl bg-rose-100 px-4 py-3 text-sm font-bold text-rose-900';
+        verdictText.textContent = `🦴 ${t('wrongBadge')}`;
+      }
+
+      verdictMya.textContent = `${t('mrcaLabel')}: ~${puzzle.closeMrca.mya} ${t('myaUnit')}`;
+      factText.textContent = puzzle.fact[lang];
+      renderCladogram(puzzle);
+
+      if (nextBtn) {
+        if (activeMode === 'endless') {
+          nextBtn.textContent = isCorrect ? t('playAgainEndless') : t('seeResults');
+        } else {
+          nextBtn.textContent = currentIndex >= queue.length - 1 ? t('seeResults') : t('nextRound');
+        }
+      }
+    }
+
+    function showSummary() {
+      gameStage.classList.add('hidden');
+      summaryStage.classList.remove('hidden');
+      progressBar.classList.add('hidden');
+
+      const score = results.filter(Boolean).length;
+      const total = results.length || 1;
+      const accuracy = Math.round((score / total) * 100);
+
+      if (activeMode === 'daily') {
+        const today = getUtcDateKey();
+        if (stats.lastDailyDate !== today) {
+          const yesterday = new Date(Date.now() - 86400000);
+          const yKey = `${yesterday.getUTCFullYear()}-${String(yesterday.getUTCMonth() + 1).padStart(2, '0')}-${String(yesterday.getUTCDate()).padStart(2, '0')}`;
+          stats.dailyStreak = stats.lastDailyDate === yKey ? stats.dailyStreak + 1 : 1;
+          stats.lastDailyDate = today;
+          stats.dailyResults[today] = results;
+          saveStats(stats);
+        }
+        summaryEmoji.textContent = score >= 4 ? '🧬' : score >= 2 ? '🌿' : '🦴';
+        summaryTitle.textContent = t('dailyCompleteTitle');
+        summarySubtitle.textContent = t('dailyCompleteSubtitle');
+        sumScore.textContent = `${score}/${total}`;
+        sumStreak.textContent = String(stats.dailyStreak);
+        sumAccuracy.textContent = `${accuracy}%`;
+        secondaryActionBtn.textContent = t('switchToEndless');
+      } else if (activeMode === 'endless') {
+        summaryEmoji.textContent = endlessStreak >= 5 ? '🏆' : '☄️';
+        summaryTitle.textContent = t('endlessOverTitle');
+        summarySubtitle.textContent = t('endlessOverSubtitle');
+        sumScore.textContent = String(endlessStreak);
+        sumStreak.textContent = String(stats.bestEndless);
+        sumAccuracy.textContent = `${accuracy}%`;
+        secondaryActionBtn.textContent = t('tryAgainEndless');
+      } else {
+        summaryEmoji.textContent = score >= Math.ceil(total * 0.7) ? '🧬' : '🌿';
+        summaryTitle.textContent = getLang() === 'zh' ? `${catZh} 完成！` : `${catEn} Complete!`;
+        summarySubtitle.textContent = t('dailyCompleteSubtitle');
+        sumScore.textContent = `${score}/${total}`;
+        sumStreak.textContent = String(stats.dailyStreak);
+        sumAccuracy.textContent = `${accuracy}%`;
+        secondaryActionBtn.textContent = t('tryAgainEndless');
+      }
+
+      summaryGrid.innerHTML = results
+        .map((ok) => `<span class="inline-block">${ok ? '🌿' : '🦴'}</span>`)
+        .join('');
+      updateStatsStrip();
+    }
+
+    function startDaily() {
+      activeMode = 'daily';
+      if (tabDaily && tabEndless) {
+        tabDaily.className =
+          'rounded-full bg-forest-700 px-4 py-1.5 text-xs font-semibold text-white transition cursor-pointer';
+        tabEndless.className =
+          'rounded-full px-4 py-1.5 text-xs font-semibold text-slate-600 transition hover:text-forest-800 cursor-pointer';
+      }
+      const today = getUtcDateKey();
+      queue = pickSeeded(puzzles, 5, `${today}:${salt}`);
+      currentIndex = 0;
+
+      if (stats.dailyResults && Array.isArray(stats.dailyResults[today]) && stats.dailyResults[today].length === queue.length) {
+        results = [...stats.dailyResults[today]];
+        showSummary();
+        return;
+      }
+
+      results = [];
+      renderQuestion();
+    }
+
+    function startEndless() {
+      activeMode = 'endless';
+      if (tabDaily && tabEndless) {
+        tabEndless.className =
+          'rounded-full bg-forest-700 px-4 py-1.5 text-xs font-semibold text-white transition cursor-pointer';
+        tabDaily.className =
+          'rounded-full px-4 py-1.5 text-xs font-semibold text-slate-600 transition hover:text-forest-800 cursor-pointer';
+      }
+      queue = shuffleRandom(puzzles);
+      currentIndex = 0;
+      results = [];
+      endlessStreak = 0;
+      renderQuestion();
+    }
+
+    function startCategoryOrSingle() {
+      queue = activeMode === 'single' ? puzzles.slice(0, 1) : shuffleRandom(puzzles);
+      currentIndex = 0;
+      results = [];
+      renderQuestion();
+    }
+
+    // Event Listeners
+    choiceBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', () => handleGuess(idx));
+    });
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (activeMode === 'endless') {
+          if (!lastChosenIsCloser) {
+            showSummary();
+            return;
+          }
+          currentIndex += 1;
+          if (currentIndex >= queue.length) {
+            queue = shuffleRandom(puzzles);
+            currentIndex = 0;
+          }
+          renderQuestion();
+          return;
+        }
+
+        if (currentIndex >= queue.length - 1) {
+          showSummary();
+        } else {
+          currentIndex += 1;
+          renderQuestion();
+        }
+      });
+    }
+
+    if (tabDaily) tabDaily.addEventListener('click', startDaily);
+    if (tabEndless) tabEndless.addEventListener('click', startEndless);
+
+    if (secondaryActionBtn) {
+      secondaryActionBtn.addEventListener('click', () => {
+        if (activeMode === 'daily') startEndless();
+        else if (activeMode === 'endless') startEndless();
+        else startCategoryOrSingle();
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const grid = results.map((ok) => (ok ? '🌿' : '🦴')).join('');
+        const score = results.filter(Boolean).length;
+        const header =
+          activeMode === 'endless'
+            ? `🧬 EvoGuess Endless — 🔥 ${endlessStreak} Streak`
+            : activeMode === 'category'
+              ? `🧬 EvoGuess (${catEn}) — ${score}/${results.length}`
+              : `🧬 EvoGuess #${getDailyNumber()} — ${score}/${results.length}`;
+        const text = `${header}\n${grid}\n🔥 Streak: ${activeMode === 'endless' ? endlessStreak : stats.dailyStreak}\nhttps://evoguess.com`;
+
+        try {
+          await navigator.clipboard.writeText(text);
+          shareToast.classList.remove('hidden');
+          setTimeout(() => shareToast.classList.add('hidden'), 2600);
+        } catch {
+          window.prompt('Copy your EvoGuess result:', text);
+        }
+      });
+    }
+
+    // Re-render current screen smoothly on language switch
+    window.addEventListener('evoguess:langchange', () => {
+      if (!summaryStage.classList.contains('hidden')) {
+        showSummary();
+        return;
+      }
+      const puzzle = queue[currentIndex];
+      if (!puzzle) return;
+      const lang = getLang();
+      targetName.textContent = puzzle.target.name[lang];
+      targetGroup.textContent = puzzle.target.group[lang];
+      choiceBtns.forEach((btn, idx) => {
+        const opt = currentOptions[idx];
+        if (!opt) return;
+        btn.querySelector('.choice-name').textContent = opt.species.name[lang];
+        btn.querySelector('.choice-group').textContent = opt.species.group[lang];
+        if (answered) {
+          const badge = btn.querySelector('.choice-badge');
+          if (opt.isCloser) badge.textContent = `✓ ${t('closerTag')}`;
+          else badge.textContent = badge.textContent.startsWith('✕') ? `✕ ${t('fartherTag')}` : t('fartherTag');
+        }
+      });
+      if (answered) {
+        renderReveal(puzzle, lastChosenIsCloser);
+      }
+    });
+
+    // Boot
+    if (initialMode === 'daily') startDaily();
+    else startCategoryOrSingle();
+  })();
+</script>

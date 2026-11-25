@@ -1,0 +1,226 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EvoGame from '../components/EvoGame.astro';
+import { CATEGORIES, PUZZLES } from '../data/puzzles';
+import { UI_STRINGS } from '../i18n/translations';
+
+const en = UI_STRINGS.en;
+const featuredMatchups = PUZZLES.slice(0, 8);
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'EvoGuess',
+    url: 'https://evoguess.com',
+    applicationCategory: 'GameApplication',
+    operatingSystem: 'Any',
+    genre: 'Educational Trivia & Biology Puzzle',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    description:
+      'Play EvoGuess — the free daily evolutionary tree game. Guess which species share a more recent common ancestor and reveal the real phylogenetic cladogram.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: en.faq1Q,
+        acceptedAnswer: { '@type': 'Answer', text: en.faq1A },
+      },
+      {
+        '@type': 'Question',
+        name: en.faq2Q,
+        acceptedAnswer: { '@type': 'Answer', text: en.faq2A },
+      },
+      {
+        '@type': 'Question',
+        name: en.faq3Q,
+        acceptedAnswer: { '@type': 'Answer', text: en.faq3A },
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="EvoGuess — Daily Evolutionary Tree & Animal Phylogeny Game"
+  description="Which animal is evolutionarily closer? Play EvoGuess free in your browser — a 2-minute daily biology & Tree of Life guessing game with interactive cladograms."
+  canonicalPath="/"
+  jsonLd={jsonLd}
+>
+  <!-- Hero & Immediate Playable Game -->
+  <section class="mx-auto max-w-4xl px-4 pt-7 pb-10 sm:pt-10">
+    <div class="mx-auto max-w-2xl text-center mb-6">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full border border-forest-200 bg-forest-50 px-3 py-1 text-xs font-semibold text-forest-800"
+      >
+        <span aria-hidden="true">🧬</span>
+        <span data-i18n="heroBadge">{en.heroBadge}</span>
+      </span>
+      <h1
+        class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-forest-900"
+        style="font-family: var(--font-display);"
+        data-i18n="heroTitle"
+      >
+        {en.heroTitle}
+      </h1>
+      <p class="mt-2 text-sm sm:text-base text-slate-600" data-i18n="heroSubtitle">
+        {en.heroSubtitle}
+      </p>
+    </div>
+
+    <EvoGame puzzles={PUZZLES} mode="daily" salt="evoguess-daily" />
+  </section>
+
+  <!-- Topic Modes (SEO Hub) -->
+  <section id="topics" class="mx-auto max-w-4xl px-4 py-10">
+    <div class="mb-6">
+      <h2
+        class="text-2xl font-bold text-forest-900"
+        style="font-family: var(--font-display);"
+        data-i18n="exploreCategoriesTitle"
+      >
+        {en.exploreCategoriesTitle}
+      </h2>
+      <p class="mt-1 text-sm text-slate-600" data-i18n="exploreCategoriesSub">
+        {en.exploreCategoriesSub}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {
+        CATEGORIES.map((cat) => (
+          <a
+            href={`/mode/${cat.slug}`}
+            class="group flex items-start gap-4 rounded-2xl border border-forest-200/80 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-forest-500 hover:shadow-md"
+          >
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-forest-50 text-2xl ring-1 ring-forest-100 transition-transform group-hover:scale-105">
+              {cat.emoji}
+            </span>
+            <div>
+              <h3
+                class="font-bold text-forest-900 group-hover:text-forest-700"
+                data-en={cat.title.en}
+                data-zh={cat.title.zh}
+              >
+                {cat.title.en}
+              </h3>
+              <p
+                class="mt-1 text-xs leading-relaxed text-slate-600"
+                data-en={cat.description.en}
+                data-zh={cat.description.zh}
+              >
+                {cat.description.en}
+              </p>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Programmatic SEO Matchup Links -->
+  <section class="mx-auto max-w-4xl px-4 py-8">
+    <div class="mb-5">
+      <h2
+        class="text-2xl font-bold text-forest-900"
+        style="font-family: var(--font-display);"
+        data-i18n="popularMatchupsTitle"
+      >
+        {en.popularMatchupsTitle}
+      </h2>
+      <p class="mt-1 text-sm text-slate-600" data-i18n="popularMatchupsSub">
+        {en.popularMatchupsSub}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {
+        featuredMatchups.map((p) => (
+          <a
+            href={`/vs/${p.id}`}
+            class="flex items-center justify-between gap-3 rounded-xl border border-slate-200/90 bg-white px-4 py-3.5 text-sm font-medium text-slate-800 transition hover:border-forest-500 hover:bg-forest-50/40"
+          >
+            <span class="flex items-center gap-2.5">
+              <span class="text-xl" aria-hidden="true">{p.target.emoji}</span>
+              <span data-en={p.seoQuestion.en} data-zh={p.seoQuestion.zh}>
+                {p.seoQuestion.en}
+              </span>
+            </span>
+            <span class="shrink-0 text-forest-600 font-bold">→</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- How to Play + SEO Editorial Content -->
+  <section id="how-to-play" class="mx-auto max-w-4xl px-4 py-10">
+    <div class="rounded-3xl border border-forest-200/80 bg-white p-6 sm:p-8">
+      <h2
+        class="text-2xl font-bold text-forest-900"
+        style="font-family: var(--font-display);"
+        data-i18n="howToTitle"
+      >
+        {en.howToTitle}
+      </h2>
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="rounded-2xl bg-forest-50/60 p-4 border border-forest-100">
+          <h3 class="font-bold text-sm text-forest-900" data-i18n="howToStep1Title">
+            {en.howToStep1Title}
+          </h3>
+          <p class="mt-1.5 text-xs leading-relaxed text-slate-600" data-i18n="howToStep1Body">
+            {en.howToStep1Body}
+          </p>
+        </div>
+        <div class="rounded-2xl bg-forest-50/60 p-4 border border-forest-100">
+          <h3 class="font-bold text-sm text-forest-900" data-i18n="howToStep2Title">
+            {en.howToStep2Title}
+          </h3>
+          <p class="mt-1.5 text-xs leading-relaxed text-slate-600" data-i18n="howToStep2Body">
+            {en.howToStep2Body}
+          </p>
+        </div>
+        <div class="rounded-2xl bg-forest-50/60 p-4 border border-forest-100">
+          <h3 class="font-bold text-sm text-forest-900" data-i18n="howToStep3Title">
+            {en.howToStep3Title}
+          </h3>
+          <p class="mt-1.5 text-xs leading-relaxed text-slate-600" data-i18n="howToStep3Body">
+            {en.howToStep3Body}
+          </p>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="mt-8 border-t border-slate-100 pt-7">
+        <h2
+          class="text-xl font-bold text-forest-900"
+          style="font-family: var(--font-display);"
+          data-i18n="faqTitle"
+        >
+          {en.faqTitle}
+        </h2>
+        <div class="mt-4 space-y-4 text-sm">
+          <div>
+            <h3 class="font-semibold text-slate-900" data-i18n="faq1Q">{en.faq1Q}</h3>
+            <p class="mt-1 text-slate-600 leading-relaxed" data-i18n="faq1A">{en.faq1A}</p>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900" data-i18n="faq2Q">{en.faq2Q}</h3>
+            <p class="mt-1 text-slate-600 leading-relaxed" data-i18n="faq2A">{en.faq2A}</p>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900" data-i18n="faq3Q">{en.faq3Q}</h3>
+            <p class="mt-1 text-slate-600 leading-relaxed" data-i18n="faq3A">{en.faq3A}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

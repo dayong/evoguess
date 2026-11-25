@@ -1,0 +1,183 @@
+---
+import '../styles/global.css';
+import { UI_STRINGS } from '../i18n/translations';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description, canonicalPath = '/', jsonLd } = Astro.props;
+const canonicalUrl = new URL(canonicalPath, 'https://evoguess.com').toString();
+const en = UI_STRINGS.en;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="EvoGuess" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Favicon (inline SVG) -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231b4d38'/%3E%3Cpath d='M16 44 L30 44 L30 22 L48 22 M30 34 L48 34 M16 44 L48 44' stroke='%23a7f3d0' stroke-width='4.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='48' cy='22' r='4' fill='%23fef08a'/%3E%3Ccircle cx='48' cy='34' r='4' fill='%23fef08a'/%3E%3Ccircle cx='48' cy='44' r='4' fill='%23ffffff'/%3E%3C/svg%3E"
+    />
+
+    {
+      jsonLd && (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(jsonLd)}
+        />
+      )
+    }
+  </head>
+  <body class="flex flex-col min-h-dvh text-slate-900 antialiased selection:bg-forest-200 selection:text-forest-900">
+    <!-- Top Header -->
+    <header class="sticky top-0 z-30 border-b border-forest-200/70 bg-[#faf9f5]/90 backdrop-blur-md">
+      <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <a href="/" class="flex items-center gap-2.5 group">
+          <span
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-forest-700 text-emerald-100 shadow-sm transition-transform group-hover:scale-105"
+            aria-hidden="true"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M3 18h6V7h12" />
+              <path d="M9 13h12" />
+              <path d="M3 18h18" />
+              <circle cx="21" cy="7" r="1.6" fill="#fef08a" stroke="none" />
+              <circle cx="21" cy="13" r="1.6" fill="#fef08a" stroke="none" />
+              <circle cx="21" cy="18" r="1.6" fill="#ffffff" stroke="none" />
+            </svg>
+          </span>
+          <div class="leading-tight">
+            <span class="block font-bold tracking-tight text-lg text-forest-900" style="font-family: var(--font-display);">
+              EvoGuess
+            </span>
+            <span class="block text-[11px] font-medium text-forest-600/90" data-i18n="brandTagline">
+              {en.brandTagline}
+            </span>
+          </div>
+        </a>
+
+        <nav class="flex items-center gap-2 sm:gap-4 text-sm font-medium text-slate-700">
+          <a href="/" class="hidden sm:inline-block hover:text-forest-700 transition-colors" data-i18n="navDaily">
+            {en.navDaily}
+          </a>
+          <a href="/#topics" class="hidden sm:inline-block hover:text-forest-700 transition-colors" data-i18n="navModes">
+            {en.navModes}
+          </a>
+          <a href="/#how-to-play" class="hidden md:inline-block hover:text-forest-700 transition-colors" data-i18n="navHowTo">
+            {en.navHowTo}
+          </a>
+
+          <!-- Language Switcher (EN / 中文) -->
+          <button
+            id="lang-toggle-btn"
+            type="button"
+            aria-label="Toggle Language"
+            class="inline-flex items-center gap-1.5 rounded-full border border-forest-200 bg-white px-3 py-1.5 text-xs font-semibold text-forest-800 shadow-xs transition hover:border-forest-500 hover:bg-forest-50 cursor-pointer"
+          >
+            <span aria-hidden="true">🌐</span>
+            <span id="lang-toggle-label">EN / 中文</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 border-t border-forest-200/70 bg-white/70">
+      <div class="mx-auto max-w-4xl px-4 py-8 text-center sm:text-left">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p class="font-semibold text-forest-900" style="font-family: var(--font-display);">EvoGuess</p>
+            <p class="mt-1 text-xs text-slate-500" data-i18n="footerNote">{en.footerNote}</p>
+          </div>
+          <div class="flex flex-wrap justify-center gap-4 text-xs font-medium text-slate-600">
+            <a href="/mode/mammals" class="hover:text-forest-700">Mammals</a>
+            <a href="/mode/marine" class="hover:text-forest-700">Marine Life</a>
+            <a href="/mode/dinosaurs-birds" class="hover:text-forest-700">Dinosaurs &amp; Birds</a>
+            <a href="/mode/insects-plants" class="hover:text-forest-700">Wild Relatives</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Global i18n sync script -->
+    <script define:vars={{ UI_STRINGS }}>
+      (function () {
+        const STORAGE_KEY = 'evoguess_lang';
+
+        function getLang() {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved === 'en' || saved === 'zh') return saved;
+          return 'en';
+        }
+
+        function applyStaticI18n(lang) {
+          document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+          const dict = UI_STRINGS[lang] || UI_STRINGS.en;
+          document.querySelectorAll('[data-i18n]').forEach((el) => {
+            const key = el.getAttribute('data-i18n');
+            if (key && dict[key]) {
+              el.textContent = dict[key];
+            }
+          });
+          document.querySelectorAll('[data-en][data-zh]').forEach((el) => {
+            const val = el.getAttribute(lang === 'zh' ? 'data-zh' : 'data-en');
+            if (val) el.textContent = val;
+          });
+          const label = document.getElementById('lang-toggle-label');
+          if (label) label.textContent = lang === 'en' ? '中文' : 'English';
+        }
+
+        window.__evoGetLang = getLang;
+        window.__evoSetLang = function (lang) {
+          localStorage.setItem(STORAGE_KEY, lang);
+          applyStaticI18n(lang);
+          window.dispatchEvent(new CustomEvent('evoguess:langchange', { detail: { lang } }));
+        };
+
+        const initial = getLang();
+        applyStaticI18n(initial);
+
+        const btn = document.getElementById('lang-toggle-btn');
+        if (btn) {
+          btn.addEventListener('click', () => {
+            const next = getLang() === 'en' ? 'zh' : 'en';
+            window.__evoSetLang(next);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://evoguess.com/sitemap-index.xml
