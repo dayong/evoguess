@@ -1,0 +1,433 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { UI_STRINGS } from '../i18n/translations';
+
+const en = UI_STRINGS.en;
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') || 'https://evoguess.site';
+
+const classicTraps = [
+  {
+    slug: 'whale-hippo-vs-shark',
+    emoji: '🐋',
+    title: { en: 'Body Shape Trap: Whales vs. Sharks', zh: '体型伪装陷阱：鲸鱼与鲨鱼' },
+    summary: {
+      en: 'Streamlined bodies and fins evolved independently for swimming. Genetically, whales nested inside even-toed ungulates — making hippos (~55 MYA) far closer than sharks (~460 MYA).',
+      zh: '流线型身躯与鱼鳍都是为适应海洋而独立演化出的特征。分子证据显示鲸类隶属偶蹄目，与河马（约 5500 万年前）远比与鲨鱼（约 4.6 亿年前）亲近。',
+    },
+  },
+  {
+    slug: 'trex-chicken-vs-triceratops',
+    emoji: '🦖',
+    title: { en: 'Dinosaur Split Trap: T. rex vs. Triceratops', zh: '恐龙分类陷阱：霸王龙与三角龙' },
+    summary: {
+      en: 'Both lived in the Late Cretaceous, but birds are living theropod dinosaurs. T. rex shares a much more recent common ancestor with a chicken (~150 MYA) than with ornithischian Triceratops (~235 MYA).',
+      zh: '两者虽同处白垩纪晚期，但鸟类本身就是活着的兽脚类恐龙。霸王龙与鸡的共同祖先（约 1.5 亿年前）远近于鸟臀目的三角龙（约 2.35 亿年前）。',
+    },
+  },
+  {
+    slug: 'falcon-parrot-vs-eagle',
+    emoji: '🦅',
+    title: { en: 'Lifestyle Trap: Falcons vs. Eagles', zh: '生态位陷阱：游隼与老鹰' },
+    summary: {
+      en: 'Hooked beaks and razor talons look identical, yet genome sequencing revealed falcons sit next to parrots and songbirds (~62 MYA), not hawks or eagles (~66+ MYA).',
+      zh: '钩状喙与利爪几乎一模一样，但基因组测序揭示：隼类在进化树上紧挨着鹦鹉与鸣禽，反倒离鹰、雕更远。',
+    },
+  },
+  {
+    slug: 'mushroom-chimp-vs-oak',
+    emoji: '🍄',
+    title: { en: 'Kingdom Trap: Mushrooms vs. Plants', zh: '界级误区：蘑菇与植物' },
+    summary: {
+      en: 'Mushrooms grow in soil and do not walk, yet fungi and animals share the Opisthokonta supergroup (~1,100 MYA). You are evolutionarily closer to a portobello than an oak tree is!',
+      zh: '蘑菇扎根土壤且不会移动，但真菌与动物同属后鞭毛生物（约 11 亿年前分化）。从血缘上看，蘑菇离黑猩猩和人类比离橡树更近！',
+    },
+  },
+  {
+    slug: 'pangolin-wolf-vs-armadillo',
+    emoji: '🦔',
+    title: { en: 'Armor Trap: Pangolins vs. Armadillos', zh: '铠甲陷阱：穿山甲与犰狳' },
+    summary: {
+      en: 'Both roll into armored balls to eat ants, yet pangolins belong to Ferae — sister to Carnivora (wolves, cats, bears) — while armadillos split away much earlier in Xenarthra.',
+      zh: '两者都身披鳞甲、以蚁类为食，但穿山甲属于猛兽类（Ferae），是食肉目（狼、猫、熊）的姐妹群，与贫齿总目的犰狳毫无近亲关系。',
+    },
+  },
+  {
+    slug: 'starfish-human-vs-bee',
+    emoji: '⭐',
+    title: { en: 'Invertebrate Trap: Starfish vs. Bees', zh: '无脊椎动物陷阱：海星与蜜蜂' },
+    summary: {
+      en: '“Invertebrate” is not a true evolutionary clade! Starfish and humans are both deuterostomes (~550 MYA), whereas insects are protostomes that diverged much earlier.',
+      zh: '“无脊椎动物”并非单一进化支！海星与人类同属后口动物（约 5.5 亿年前），而蜜蜂等昆虫属于更早分化的原口动物。',
+    },
+  },
+];
+
+const glossary = [
+  {
+    term: { en: 'Cladogram (Phylogenetic Tree)', zh: '分支图 / 系统发育树（Cladogram）' },
+    def: {
+      en: 'A branching diagram showing evolutionary relationships based on shared ancestry. Only the branching order (nodes) matters — not how close two labels sit next to each other.',
+      zh: '以树状分支呈现物种亲缘关系的图表。判断亲疏只看“分叉节点”的远近，而不是两个名字在页面上排得有多近。',
+    },
+  },
+  {
+    term: { en: 'MRCA (Most Recent Common Ancestor)', zh: '最近共同祖先（MRCA）' },
+    def: {
+      en: 'The latest ancestral population shared by two lineages before they split apart. A more recent MRCA (smaller MYA number) means closer evolutionary relatedness.',
+      zh: '两个演化支在分道扬镳前最后共享的祖先群体。MRCA 距今越近（MYA 数值越小），两者血缘越亲近。',
+    },
+  },
+  {
+    term: { en: 'Convergent Evolution', zh: '趋同进化（Convergent Evolution）' },
+    def: {
+      en: 'When unrelated species independently evolve similar traits (like wings in bats and birds, or fins in whales and sharks) to solve similar environmental challenges.',
+      zh: '亲缘关系很远的物种为了适应相似环境，各自独立演化出相似外形或功能（例如蝙蝠与鸟的翅膀、鲸鱼与鲨鱼的鳍）。',
+    },
+  },
+  {
+    term: { en: 'Clade (Monophyletic Group)', zh: '进化支 / 单系群（Clade）' },
+    def: {
+      en: 'An ancestor and all of its descendants. Birds are inside the Dinosauria clade, and whales are inside the Artiodactyla (even-toed ungulate) clade.',
+      zh: '包含某一共同祖先及其全部后代的完整分支。例如鸟类属于恐龙进化支，鲸鱼属于偶蹄目进化支。',
+    },
+  },
+  {
+    term: { en: 'Sister Taxa & Outgroup', zh: '姐妹群与外群（Sister Taxa & Outgroup）' },
+    def: {
+      en: 'Two lineages sharing the most recent branching node are sister taxa; a lineage that branched off earlier serves as the outgroup.',
+      zh: '共享最近分叉节点的两个分支互为“姐妹群”；在更早时间点分出去的分支则称为“外群”。',
+    },
+  },
+  {
+    term: { en: 'MYA (Million Years Ago)', zh: '百万年前（MYA）' },
+    def: {
+      en: 'Standard geological time unit used in molecular clocks (such as TimeTree) to estimate when two evolutionary branches diverged.',
+      zh: '地质与分子钟常用时间单位（如 TimeTree 数据库），用于估算两个物种分支大约在多少百万年前开始分化。',
+    },
+  },
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'How to Read a Cladogram & Spot Convergent Evolution',
+    description:
+      'Learn how to read phylogenetic trees, understand Most Recent Common Ancestors (MRCA), and avoid classic convergent evolution traps.',
+    url: `${siteOrigin}/guide/`,
+    author: {
+      '@type': 'Organization',
+      name: 'EvoGuess',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'EvoGuess',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'How do you read a cladogram?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Trace two species backward along their branches until they meet at a shared node (their Most Recent Common Ancestor). The two species that meet at a more recent node are more closely related — regardless of how similar they look.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is convergent evolution?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Convergent evolution occurs when distantly related organisms independently evolve similar adaptations—such as flippers in whales and sharks, or armor in pangolins and armadillos—due to similar ecological pressures.',
+        },
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="How to Read a Cladogram & Spot Convergent Evolution | EvoGuess Guide"
+  description="A clear visual guide to reading phylogenetic trees, understanding Most Recent Common Ancestors (MRCA), and spotting convergent evolution traps in biology."
+  canonicalPath="/guide/"
+  jsonLd={jsonLd}
+>
+  <article class="mx-auto max-w-4xl px-4 pt-7 pb-12 sm:pt-10">
+    <div class="mb-4 text-center">
+      <a
+        href="/"
+        class="inline-flex items-center text-xs font-semibold text-forest-700 hover:underline"
+        data-i18n="vsBackHome"
+      >
+        {en.vsBackHome}
+      </a>
+    </div>
+
+    <!-- Header -->
+    <header class="mx-auto max-w-2xl text-center mb-10">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full border border-forest-200 bg-forest-50 px-3 py-1 text-xs font-semibold text-forest-800"
+      >
+        <span aria-hidden="true">📖</span>
+        <span data-i18n="guideBadge">{en.guideBadge}</span>
+      </span>
+      <h1
+        class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-forest-900"
+        style="font-family: var(--font-display);"
+        data-i18n="guideTitle"
+      >
+        {en.guideTitle}
+      </h1>
+      <p class="mt-2.5 text-sm sm:text-base text-slate-600" data-i18n="guideSubtitle">
+        {en.guideSubtitle}
+      </p>
+    </header>
+
+    <!-- Section 1: Anatomy of a Cladogram -->
+    <section class="rounded-3xl border border-forest-200/80 bg-white p-6 sm:p-8 shadow-xs">
+      <h2
+        class="text-2xl font-bold text-forest-900"
+        style="font-family: var(--font-display);"
+        data-en="1. How to Read a Cladogram in 30 Seconds"
+        data-zh="1. 30 秒看懂进化树（分支图）"
+      >
+        1. How to Read a Cladogram in 30 Seconds
+      </h2>
+      <p
+        class="mt-2.5 text-sm leading-relaxed text-slate-600"
+        data-en="A cladogram reads like a family tree turned on its side. Time flows from left (ancient ancestors) to right (living species). Whenever a line splits at a node, one ancestral lineage diverged into two separate branches."
+        data-zh="进化树就像横放的家族谱系：时间从左（远古祖先）流向右（现存物种）。每当线条在某个“节点（Node）”分叉，就代表一个共同祖先分化成了两条独立演化支。"
+      >
+        A cladogram reads like a family tree turned on its side. Time flows from left (ancient ancestors) to right (living species). Whenever a line splits at a node, one ancestral lineage diverged into two separate branches.
+      </p>
+
+      <!-- Annotated SVG Cladogram Diagram -->
+      <div class="mt-5 overflow-hidden rounded-2xl border border-forest-100 bg-[#f6faf7] p-4 sm:p-5">
+        <div class="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-forest-700">
+          <span data-en="Annotated Example: Whale · Hippo · Shark" data-zh="图解示例：蓝鲸 · 河马 · 鲨鱼">
+            Annotated Example: Whale · Hippo · Shark
+          </span>
+          <span data-en="Time → Present" data-zh="时间轴 → 现代">Time → Present</span>
+        </div>
+
+        <svg viewBox="0 0 600 215" class="w-full h-auto" role="img" aria-label="Annotated cladogram showing Blue Whale and Hippo sharing a recent node at 55 MYA while Shark branches off earlier at 460 MYA">
+          <!-- Time arrow -->
+          <line x1="24" y1="196" x2="560" y2="196" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4" />
+          <text x="24" y="210" font-size="10" font-weight="600" fill="#64748b">~460 MYA (Ancient)</text>
+          <text x="485" y="210" font-size="10" font-weight="600" fill="#1b4d38">Present Day →</text>
+
+          <!-- Root to far split -->
+          <path d="M 24 118 H 112" stroke="#94a3b8" stroke-width="3.5" fill="none" stroke-linecap="round" />
+          <!-- Outgroup (Shark) -->
+          <path d="M 112 118 V 162 H 368" stroke="#94a3b8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Inner clade trunk -->
+          <path d="M 112 118 V 68 H 254" stroke="#2d7a59" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Whale branch -->
+          <path d="M 254 68 V 36 H 368" stroke="#1b4d38" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Hippo branch -->
+          <path d="M 254 68 V 100 H 368" stroke="#1b4d38" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+
+          <!-- Nodes -->
+          <circle cx="112" cy="118" r="6" fill="#64748b" />
+          <circle cx="254" cy="68" r="7" fill="#1b4d38" />
+
+          <!-- Node badges -->
+          <rect x="42" y="128" width="142" height="22" rx="11" fill="#e2e8f0" />
+          <text x="113" y="143" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">Older Node (~460 MYA)</text>
+
+          <rect x="176" y="77" width="156" height="22" rx="11" fill="#d1fae5" />
+          <text x="254" y="92" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">Recent MRCA (~55 MYA)</text>
+
+          <!-- Bracket for Sister Clade -->
+          <path d="M 505 26 H 515 V 110 H 505" stroke="#1b4d38" stroke-width="2" fill="none" />
+          <text x="522" y="65" font-size="10.5" font-weight="700" fill="#1b4d38">Sister</text>
+          <text x="522" y="79" font-size="10.5" font-weight="700" fill="#1b4d38">Clade</text>
+
+          <!-- Leaf labels -->
+          <text x="380" y="41" font-size="14" font-weight="700" fill="#0f291e">🐋 Blue Whale</text>
+          <text x="380" y="105" font-size="14" font-weight="700" fill="#065f46">🦛 Hippopotamus</text>
+          <text x="380" y="167" font-size="13.5" font-weight="600" fill="#64748b">🦈 Great White Shark (Outgroup)</text>
+        </svg>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs leading-relaxed">
+        <div class="rounded-2xl bg-forest-50/60 p-4 border border-forest-100">
+          <p class="font-bold text-forest-900" data-en="Count Nodes, Not Looks" data-zh="看分叉节点，不看长相">
+            Count Nodes, Not Looks
+          </p>
+          <p
+            class="mt-1 text-slate-600"
+            data-en="Trace both species backward to where their lines first meet. The closer to the right that node is, the more closely related they are."
+            data-zh="把两个物种的分支向左回溯，找到它们首次汇合的节点。节点越靠右（时间越近），血缘就越亲近。"
+          >
+            Trace both species backward to where their lines first meet. The closer to the right that node is, the more closely related they are.
+          </p>
+        </div>
+        <div class="rounded-2xl bg-forest-50/60 p-4 border border-forest-100">
+          <p class="font-bold text-forest-900" data-en="Branches Can Rotate" data-zh="分支上下顺序可以翻转">
+            Branches Can Rotate
+          </p>
+          <p
+            class="mt-1 text-slate-600"
+            data-en="Like a hanging mobile, swapping the top and bottom arms of any node does not change evolutionary relationships."
+            data-zh="就像悬挂的风铃，把某个节点的上下两条分支互换位置，完全不会改变物种之间的真实亲缘关系。"
+          >
+            Like a hanging mobile, swapping the top and bottom arms of any node does not change evolutionary relationships.
+          </p>
+        </div>
+        <div class="rounded-2xl bg-forest-50/60 p-4 border border-forest-100">
+          <p class="font-bold text-forest-900" data-en="No “Higher” or “Lower”" data-zh="没有“高等”或“低等”">
+            No “Higher” or “Lower”
+          </p>
+          <p
+            class="mt-1 text-slate-600"
+            data-en="Every living tip on the right has been evolving for the exact same amount of time since the root of life."
+            data-zh="右侧所有现存物种都经历了同样漫长的演化时间，进化树只描述亲缘远近，不排“高低贵贱”。"
+          >
+            Every living tip on the right has been evolving for the exact same amount of time since the root of life.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Classic Convergent Evolution Traps -->
+    <section class="mt-10">
+      <div class="mb-5">
+        <h2
+          class="text-2xl font-bold text-forest-900"
+          style="font-family: var(--font-display);"
+          data-en="2. Six Classic Convergent Evolution Traps"
+          data-zh="2. 六大经典“趋同进化”认知陷阱"
+        >
+          2. Six Classic Convergent Evolution Traps
+        </h2>
+        <p
+          class="mt-1 text-sm text-slate-600"
+          data-en="Why do EvoGuess puzzles fool even science lovers? Because natural selection repeatedly invents the same tools (fins, wings, armor, talons) in totally different branches. Click any card to play its matchup!"
+          data-zh="为什么连生物爱好者也常在 EvoGuess 里翻车？因为自然选择会在毫不相干的分支上反复“重新发明”鱼鳍、翅膀、鳞甲和利爪。点击任意卡片即可直接实战体验："
+        >
+          Why do EvoGuess puzzles fool even science lovers? Because natural selection repeatedly invents the same tools (fins, wings, armor, talons) in totally different branches. Click any card to play its matchup!
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {
+          classicTraps.map((trap) => (
+            <a
+              href={`/vs/${trap.slug}/`}
+              class="group flex flex-col justify-between rounded-2xl border border-forest-200/80 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-forest-500 hover:shadow-md"
+            >
+              <div>
+                <div class="flex items-center gap-2.5">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-forest-50 text-2xl ring-1 ring-forest-100">
+                    {trap.emoji}
+                  </span>
+                  <h3
+                    class="font-bold text-sm text-forest-900 group-hover:text-forest-700"
+                    data-en={trap.title.en}
+                    data-zh={trap.title.zh}
+                  >
+                    {trap.title.en}
+                  </h3>
+                </div>
+                <p
+                  class="mt-3 text-xs leading-relaxed text-slate-600"
+                  data-en={trap.summary.en}
+                  data-zh={trap.summary.zh}
+                >
+                  {trap.summary.en}
+                </p>
+              </div>
+              <span
+                class="mt-3 inline-flex items-center text-xs font-semibold text-forest-700 group-hover:underline"
+                data-en="Play this matchup →"
+                data-zh="去玩这道对决 →"
+              >
+                Play this matchup →
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Section 3: Quick Phylogeny Glossary -->
+    <section class="mt-10 rounded-3xl border border-forest-200/80 bg-white p-6 sm:p-8 shadow-xs">
+      <h2
+        class="text-2xl font-bold text-forest-900"
+        style="font-family: var(--font-display);"
+        data-en="3. Essential Phylogenetics Glossary"
+        data-zh="3. 系统发育学核心术语速查"
+      >
+        3. Essential Phylogenetics Glossary
+      </h2>
+      <dl class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {
+          glossary.map((item) => (
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+              <dt
+                class="text-sm font-bold text-forest-900"
+                data-en={item.term.en}
+                data-zh={item.term.zh}
+              >
+                {item.term.en}
+              </dt>
+              <dd
+                class="mt-1.5 text-xs leading-relaxed text-slate-600"
+                data-en={item.def.en}
+                data-zh={item.def.zh}
+              >
+                {item.def.en}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <!-- Bottom CTA -->
+    <section class="mt-10 rounded-3xl border border-forest-200 bg-gradient-to-br from-forest-50 to-amber-50/50 p-6 sm:p-8 text-center">
+      <h2
+        class="text-2xl font-bold text-forest-900"
+        style="font-family: var(--font-display);"
+        data-en="Ready to Put Your Tree of Life Intuition to the Test?"
+        data-zh="准备好检验你的生命之树直觉了吗？"
+      >
+        Ready to Put Your Tree of Life Intuition to the Test?
+      </h2>
+      <p
+        class="mx-auto mt-2 max-w-xl text-sm text-slate-600"
+        data-en="Try today’s 5-round Daily Challenge, push your record in Endless Mode, or browse all curated species matchups."
+        data-zh="立即挑战今日 5 题每日谜题、在无尽模式里冲击最高连胜，或前往题库目录挑选你最感兴趣的对决。"
+      >
+        Try today’s 5-round Daily Challenge, push your record in Endless Mode, or browse all curated species matchups.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <a
+          href="/"
+          class="inline-flex items-center justify-center rounded-xl bg-forest-700 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-forest-600"
+          data-i18n="navDaily"
+        >
+          {en.navDaily}
+        </a>
+        <a
+          href="/endless/"
+          class="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-5 py-2.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+          data-i18n="tryEndlessCta"
+        >
+          {en.tryEndlessCta}
+        </a>
+        <a
+          href="/matchups/"
+          class="inline-flex items-center justify-center rounded-xl border border-forest-200 bg-white px-5 py-2.5 text-sm font-semibold text-forest-800 transition hover:bg-forest-50"
+          data-i18n="viewAllMatchupsCta"
+        >
+          {en.viewAllMatchupsCta}
+        </a>
+      </div>
+    </section>
+  </article>
+</BaseLayout>

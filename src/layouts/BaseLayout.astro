@@ -99,11 +99,14 @@ const en = UI_STRINGS.en;
           <a href="/" class="hidden sm:inline-block hover:text-forest-700 transition-colors" data-i18n="navDaily">
             {en.navDaily}
           </a>
-          <a href="/#topics" class="hidden sm:inline-block hover:text-forest-700 transition-colors" data-i18n="navModes">
-            {en.navModes}
+          <a href="/endless/" class="hidden sm:inline-block hover:text-forest-700 transition-colors" data-i18n="navEndless">
+            {en.navEndless}
           </a>
-          <a href="/#how-to-play" class="hidden md:inline-block hover:text-forest-700 transition-colors" data-i18n="navHowTo">
-            {en.navHowTo}
+          <a href="/matchups/" class="hidden md:inline-block hover:text-forest-700 transition-colors" data-i18n="navMatchups">
+            {en.navMatchups}
+          </a>
+          <a href="/guide/" class="hidden md:inline-block hover:text-forest-700 transition-colors" data-i18n="navGuide">
+            {en.navGuide}
           </a>
 
           <!-- Language Switcher (EN / 中文) -->
@@ -132,7 +135,11 @@ const en = UI_STRINGS.en;
             <p class="font-semibold text-forest-900" style="font-family: var(--font-display);">EvoGuess</p>
             <p class="mt-1 text-xs text-slate-500" data-i18n="footerNote">{en.footerNote}</p>
           </div>
-          <div class="flex flex-wrap justify-center gap-4 text-xs font-medium text-slate-600">
+          <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-medium text-slate-600">
+            <a href="/endless/" class="hover:text-forest-700" data-i18n="navEndless">{en.navEndless}</a>
+            <a href="/matchups/" class="hover:text-forest-700" data-i18n="navMatchups">{en.navMatchups}</a>
+            <a href="/guide/" class="hover:text-forest-700" data-i18n="navGuide">{en.navGuide}</a>
+            <span class="text-slate-300 hidden sm:inline" aria-hidden="true">|</span>
             <a href="/mode/mammals/" class="hover:text-forest-700">Mammals</a>
             <a href="/mode/marine/" class="hover:text-forest-700">Marine Life</a>
             <a href="/mode/dinosaurs-birds/" class="hover:text-forest-700">Dinosaurs &amp; Birds</a>

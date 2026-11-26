@@ -1,0 +1,396 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CATEGORIES, PUZZLES } from '../data/puzzles';
+import { UI_STRINGS } from '../i18n/translations';
+
+const en = UI_STRINGS.en;
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') || 'https://evoguess.site';
+
+const categoryMap = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+
+const difficultyMeta = {
+  easy: {
+    en: 'Easy',
+    zh: '入门',
+    badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+  },
+  medium: {
+    en: 'Medium',
+    zh: '进阶',
+    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+  },
+  hard: {
+    en: 'Hard',
+    zh: '硬核',
+    badgeClass: 'bg-rose-50 text-rose-800 border-rose-200',
+  },
+} as const;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'All EvoGuess Evolutionary Matchups',
+  url: `${siteOrigin}/matchups/`,
+  description: `Browse all ${PUZZLES.length} evolutionary tree matchups and convergent evolution quizzes on EvoGuess.`,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: PUZZLES.length,
+    itemListElement: PUZZLES.map((p, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: p.seoQuestion.en,
+      url: `${siteOrigin}/vs/${p.id}/`,
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title={`All ${PUZZLES.length} Evolutionary Matchups & Tree of Life Quizzes | EvoGuess`}
+  description={`Explore every evolutionary matchup in EvoGuess — filter all ${PUZZLES.length} animal, dinosaur, marine, and fungi phylogeny quizzes by category or difficulty.`}
+  canonicalPath="/matchups/"
+  jsonLd={jsonLd}
+>
+  <section class="mx-auto max-w-4xl px-4 pt-7 pb-12 sm:pt-10">
+    <div class="mb-4 text-center">
+      <a
+        href="/"
+        class="inline-flex items-center text-xs font-semibold text-forest-700 hover:underline"
+        data-i18n="vsBackHome"
+      >
+        {en.vsBackHome}
+      </a>
+    </div>
+
+    <div class="mx-auto max-w-2xl text-center mb-8">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full border border-forest-200 bg-forest-50 px-3 py-1 text-xs font-semibold text-forest-800"
+      >
+        <span aria-hidden="true">🗂️</span>
+        <span data-i18n="matchupsBadge">{en.matchupsBadge}</span>
+        <span class="rounded-full bg-forest-700 px-2 py-0.5 text-[10px] text-white">{PUZZLES.length}</span>
+      </span>
+      <h1
+        class="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-forest-900"
+        style="font-family: var(--font-display);"
+        data-i18n="matchupsTitle"
+      >
+        {en.matchupsTitle}
+      </h1>
+      <p class="mt-2 text-sm sm:text-base text-slate-600" data-i18n="matchupsSubtitle">
+        {en.matchupsSubtitle}
+      </p>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="mb-6 rounded-3xl border border-forest-200/80 bg-white p-4 sm:p-5 shadow-xs space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="relative flex-1">
+          <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true">🔍</span>
+          <input
+            id="matchup-search"
+            type="search"
+            placeholder="Search species (e.g. whale, T. rex, mushroom, 鲸鱼)..."
+            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-forest-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-200"
+          />
+        </div>
+        <div class="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Filter by difficulty">
+          <button
+            type="button"
+            data-diff-filter="all"
+            class="diff-pill rounded-full bg-forest-700 px-3 py-1.5 text-xs font-semibold text-white transition cursor-pointer"
+            data-en="All Levels"
+            data-zh="全部难度"
+          >
+            All Levels
+          </button>
+          <button
+            type="button"
+            data-diff-filter="easy"
+            class="diff-pill rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-forest-400 cursor-pointer"
+            data-en="Easy"
+            data-zh="入门"
+          >
+            Easy
+          </button>
+          <button
+            type="button"
+            data-diff-filter="medium"
+            class="diff-pill rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-forest-400 cursor-pointer"
+            data-en="Medium"
+            data-zh="进阶"
+          >
+            Medium
+          </button>
+          <button
+            type="button"
+            data-diff-filter="hard"
+            class="diff-pill rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-forest-400 cursor-pointer"
+            data-en="Hard"
+            data-zh="硬核"
+          >
+            Hard
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3.5">
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+          <button
+            type="button"
+            data-cat-filter="all"
+            class="cat-pill rounded-full bg-forest-700 px-3.5 py-1.5 text-xs font-semibold text-white transition cursor-pointer"
+            data-en={`All (${PUZZLES.length})`}
+            data-zh={`全部 (${PUZZLES.length})`}
+          >
+            All ({PUZZLES.length})
+          </button>
+          {
+            CATEGORIES.map((cat) => {
+              const count = PUZZLES.filter((p) => p.category === cat.id).length;
+              return (
+                <button
+                  type="button"
+                  data-cat-filter={cat.id}
+                  class="cat-pill inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-forest-400 cursor-pointer"
+                >
+                  <span aria-hidden="true">{cat.emoji}</span>
+                  <span data-en={`${cat.shortTitle.en} (${count})`} data-zh={`${cat.shortTitle.zh} (${count})`}>
+                    {cat.shortTitle.en} ({count})
+                  </span>
+                </button>
+              );
+            })
+          }
+        </div>
+        <p id="matchup-visible-count" class="text-xs font-semibold text-slate-500">
+          Showing {PUZZLES.length} / {PUZZLES.length}
+        </p>
+      </div>
+    </div>
+
+    <!-- All Matchups Grid -->
+    <div id="matchups-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      {
+        PUZZLES.map((p) => {
+          const cat = categoryMap[p.category];
+          const diff = difficultyMeta[p.difficulty];
+          // Deterministic non-spoiling pair order for display
+          const flip = p.id.length % 2 === 1;
+          const optA = flip ? p.farther : p.closer;
+          const optB = flip ? p.closer : p.farther;
+          const searchBlob = [
+            p.seoQuestion.en,
+            p.seoQuestion.zh,
+            p.target.name.en,
+            p.target.name.zh,
+            p.target.scientific,
+            p.closer.name.en,
+            p.closer.name.zh,
+            p.farther.name.en,
+            p.farther.name.zh,
+          ]
+            .join(' ')
+            .toLowerCase();
+
+          return (
+            <a
+              href={`/vs/${p.id}/`}
+              data-category={p.category}
+              data-difficulty={p.difficulty}
+              data-search={searchBlob}
+              class="matchup-card group flex flex-col justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-forest-500 hover:bg-forest-50/30 hover:shadow-md"
+            >
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-2.5">
+                  <span class="inline-flex items-center gap-1 rounded-full bg-forest-50 px-2.5 py-0.5 text-[11px] font-semibold text-forest-800 border border-forest-100">
+                    <span aria-hidden="true">{cat?.emoji}</span>
+                    <span data-en={cat?.shortTitle.en} data-zh={cat?.shortTitle.zh}>
+                      {cat?.shortTitle.en}
+                    </span>
+                  </span>
+                  <span
+                    class={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${diff.badgeClass}`}
+                    data-en={diff.en}
+                    data-zh={diff.zh}
+                  >
+                    {diff.en}
+                  </span>
+                </div>
+
+                <h2 class="flex items-start gap-2.5 text-sm font-bold text-slate-900 group-hover:text-forest-800 leading-snug">
+                  <span class="text-2xl leading-none shrink-0" aria-hidden="true">{p.target.emoji}</span>
+                  <span data-en={p.seoQuestion.en} data-zh={p.seoQuestion.zh}>
+                    {p.seoQuestion.en}
+                  </span>
+                </h2>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5 text-xs text-slate-600">
+                <div class="flex items-center gap-1.5 truncate">
+                  <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 font-medium">
+                    <span aria-hidden="true">{optA.emoji}</span>
+                    <span data-en={optA.name.en} data-zh={optA.name.zh}>{optA.name.en}</span>
+                  </span>
+                  <span class="text-[10px] font-bold text-slate-400">VS</span>
+                  <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 font-medium">
+                    <span aria-hidden="true">{optB.emoji}</span>
+                    <span data-en={optB.name.en} data-zh={optB.name.zh}>{optB.name.en}</span>
+                  </span>
+                </div>
+                <span class="shrink-0 font-bold text-forest-600 transition-transform group-hover:translate-x-0.5">→</span>
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
+
+    <!-- Empty state -->
+    <div id="matchups-empty" class="hidden mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center">
+      <p class="text-2xl mb-2">🦕</p>
+      <p
+        class="text-sm font-semibold text-slate-700"
+        data-en="No matchups match your current filter."
+        data-zh="没有找到符合筛选条件的进化对决。"
+      >
+        No matchups match your current filter.
+      </p>
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-3xl border border-forest-200 bg-forest-50/70 p-6">
+      <div>
+        <h2
+          class="text-lg font-bold text-forest-900"
+          style="font-family: var(--font-display);"
+          data-en="Want to test all of them back-to-back?"
+          data-zh="想一口气连刷全部题库？"
+        >
+          Want to test all of them back-to-back?
+        </h2>
+        <p
+          class="mt-1 text-xs text-slate-600"
+          data-en="Jump into Endless Streak Mode or read our quick Cladogram Guide first."
+          data-zh="直接挑战无尽连胜模式，或先花 3 分钟看看进化树入门指南。"
+        >
+          Jump into Endless Streak Mode or read our quick Cladogram Guide first.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2.5 shrink-0">
+        <a
+          href="/endless/"
+          class="inline-flex items-center justify-center rounded-xl bg-forest-700 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-forest-600"
+          data-i18n="tryEndlessCta"
+        >
+          {en.tryEndlessCta}
+        </a>
+        <a
+          href="/guide/"
+          class="inline-flex items-center justify-center rounded-xl border border-forest-200 bg-white px-4 py-2.5 text-xs font-semibold text-forest-800 transition hover:bg-forest-50"
+          data-i18n="readGuideCta"
+        >
+          {en.readGuideCta}
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  (function () {
+    const cards = Array.from(document.querySelectorAll('.matchup-card'));
+    const catPills = Array.from(document.querySelectorAll('.cat-pill'));
+    const diffPills = Array.from(document.querySelectorAll('.diff-pill'));
+    const searchInput = document.getElementById('matchup-search');
+    const countEl = document.getElementById('matchup-visible-count');
+    const emptyEl = document.getElementById('matchups-empty');
+
+    let activeCat = 'all';
+    let activeDiff = 'all';
+    let query = '';
+
+    const activePillCls = 'rounded-full bg-forest-700 px-3.5 py-1.5 text-xs font-semibold text-white transition cursor-pointer';
+    const inactivePillCls = 'rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-forest-400 cursor-pointer';
+
+    function updateSearchPlaceholder() {
+      if (!searchInput) return;
+      const lang = window.__evoGetLang ? window.__evoGetLang() : 'en';
+      searchInput.placeholder =
+        lang === 'zh'
+          ? '搜索物种（如：鲸鱼、霸王龙、蘑菇、whale）...'
+          : 'Search species (e.g. whale, T. rex, mushroom, 鲸鱼)...';
+    }
+
+    function applyFilters() {
+      let visible = 0;
+      const q = query.trim().toLowerCase();
+
+      cards.forEach((card) => {
+        const cat = card.getAttribute('data-category');
+        const diff = card.getAttribute('data-difficulty');
+        const blob = card.getAttribute('data-search') || '';
+
+        const matchCat = activeCat === 'all' || cat === activeCat;
+        const matchDiff = activeDiff === 'all' || diff === activeDiff;
+        const matchQuery = !q || blob.includes(q);
+
+        if (matchCat && matchDiff && matchQuery) {
+          card.classList.remove('hidden');
+          visible += 1;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      const lang = window.__evoGetLang ? window.__evoGetLang() : 'en';
+      if (countEl) {
+        countEl.textContent =
+          lang === 'zh'
+            ? `显示 ${visible} / ${cards.length} 道对决`
+            : `Showing ${visible} / ${cards.length}`;
+      }
+      if (emptyEl) {
+        emptyEl.classList.toggle('hidden', visible > 0);
+      }
+    }
+
+    catPills.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeCat = btn.getAttribute('data-cat-filter') || 'all';
+        catPills.forEach((b) => {
+          const isAct = b === btn;
+          b.className = `cat-pill inline-flex items-center gap-1.5 ${isAct ? activePillCls : inactivePillCls}`;
+        });
+        applyFilters();
+      });
+    });
+
+    diffPills.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeDiff = btn.getAttribute('data-diff-filter') || 'all';
+        diffPills.forEach((b) => {
+          const isAct = b === btn;
+          b.className = `diff-pill ${isAct ? activePillCls : inactivePillCls}`;
+        });
+        applyFilters();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        query = e.target.value || '';
+        applyFilters();
+      });
+    }
+
+    window.addEventListener('evoguess:langchange', () => {
+      updateSearchPlaceholder();
+      applyFilters();
+    });
+
+    updateSearchPlaceholder();
+    applyFilters();
+  })();
+</script>
